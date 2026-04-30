@@ -1,0 +1,44 @@
+export type Recipe = {
+  id: string;
+  user_id: string;
+  title: string;
+  description: string | null;
+  servings: number | null;
+  prep_time_minutes: number | null;
+  cook_time_minutes: number | null;
+  image_url: string | null;
+  source_url: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type Ingredient = {
+  id: string;
+  recipe_id: string;
+  name: string;
+  amount: number | null;
+  unit: string | null;
+  order_index: number;
+};
+
+export type Step = {
+  id: string;
+  recipe_id: string;
+  description: string;
+  order_index: number;
+};
+
+export type RecipeWithDetails = Recipe & {
+  ingredients: Ingredient[];
+  steps: Step[];
+};
+
+export type IngredientInput = {
+  name: string;
+  amount: string;
+  unit: string;
+};
+
+export type StepInput = {
+  description: string;
+};
