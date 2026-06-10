@@ -59,8 +59,8 @@ export default async function RecipesPage({
       <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 3 }}>
         <Typography variant="h4" sx={{ fontWeight: 'bold' }}>Mis recetas</Typography>
         <Box sx={{ display: "flex", gap: 1 }}>
-          <Button component={Link} href="/explore" variant="outlined">Explorar</Button>
-          <Button component={Link} href="/recipes/new" variant="contained">+ Nueva receta</Button>
+          <Link href="/explore"><Button variant="outlined">Explorar</Button></Link>
+          <Link href="/recipes/new"><Button variant="contained">+ Nueva receta</Button></Link>
           <form action="/auth/logout" method="POST">
             <Button variant="outlined" type="submit">Salir</Button>
           </form>
@@ -82,9 +82,7 @@ export default async function RecipesPage({
           ) : (
             <>
               <Typography color="text.secondary" sx={{ mb: 2 }}>Todavía no tenés recetas.</Typography>
-              <Button component={Link} href="/recipes/new" variant="contained">
-                Crear mi primera receta
-              </Button>
+              <Link href="/recipes/new"><Button variant="contained">Crear mi primera receta</Button></Link>
             </>
           )}
         </Box>

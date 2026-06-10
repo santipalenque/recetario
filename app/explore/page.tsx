@@ -66,7 +66,7 @@ export default async function ExplorePage({
             Recetas públicas de otros usuarios
           </Typography>
         </Box>
-        <Button component={Link} href="/recipes" variant="outlined">Mis recetas</Button>
+        <Link href="/recipes"><Button variant="outlined">Mis recetas</Button></Link>
       </Box>
 
       <Box sx={{ mb: 3 }}>

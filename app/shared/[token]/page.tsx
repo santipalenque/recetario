@@ -52,7 +52,7 @@ export default async function SharedRecipePage({
 
         {/* Header */}
         <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <Button component={Link} href="/recipes" variant="text">← Mis recetas</Button>
+          <Link href="/recipes"><Button variant="text">← Mis recetas</Button></Link>
           {!isOwner && <CloneSharedRecipeButton token={token} />}
         </Box>
 

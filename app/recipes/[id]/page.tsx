@@ -38,16 +38,12 @@ export default async function RecipePage({ params }: { params: Promise<{ id: str
 
         {/* Header */}
         <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <Button component={Link} href={isOwner ? "/recipes" : "/explore"} variant="text">
-            ← Volver
-          </Button>
+          <Link href={isOwner ? "/recipes" : "/explore"}><Button variant="text">← Volver</Button></Link>
           <Box sx={{ display: "flex", gap: 1 }}>
             {isOwner ? (
               <>
                 <ShareRecipeButton recipeId={id} recipeName={r.title} />
-                <Button component={Link} href={`/recipes/${id}/edit`} variant="outlined">
-                  Editar
-                </Button>
+                <Link href={`/recipes/${id}/edit`}><Button variant="outlined">Editar</Button></Link>
                 <DeleteRecipeButton recipeId={id} />
               </>
             ) : (
