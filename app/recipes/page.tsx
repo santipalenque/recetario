@@ -40,6 +40,7 @@ export default async function RecipesPage({
         <Typography variant="h4" sx={{ fontWeight: "bold" }}>Mis recetas</Typography>
         <Box sx={{ display: "flex", gap: 1 }}>
           <Link href="/explore"><Button variant="outlined">Explorar</Button></Link>
+          <Link href="/menu"><Button variant="outlined">Menú</Button></Link>
           <Link href="/recipes/new"><Button variant="contained">+ Nueva receta</Button></Link>
           <form action="/auth/logout" method="POST">
             <Button variant="outlined" type="submit">Salir</Button>
