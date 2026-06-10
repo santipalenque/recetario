@@ -8,6 +8,7 @@ export type Recipe = {
   cook_time_minutes: number | null;
   image_url: string | null;
   source_url: string | null;
+  is_public: boolean;
   created_at: string;
   updated_at: string;
 };

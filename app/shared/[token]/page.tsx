@@ -1,24 +1,37 @@
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import type { RecipeWithDetails } from "@/lib/types";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import DeleteRecipeButton from "@/components/DeleteRecipeButton";
-import CloneRecipeButton from "@/components/CloneRecipeButton";
-import ShareRecipeButton from "@/components/ShareRecipeButton";
+import { Button } from "@/components/ui/button";
+import CloneSharedRecipeButton from "@/components/CloneSharedRecipeButton";
 
-export default async function RecipePage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+export default async function SharedRecipePage({
+  params,
+}: {
+  params: Promise<{ token: string }>;
+}) {
+  const { token } = await params;
+
   const supabase = await createClient();
-
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/auth/login");
+  if (!user) redirect(`/auth/login?next=/shared/${token}`);
 
-  const { data: recipe } = await supabase
+  const service = createServiceClient();
+
+  const { data: share } = await service
+    .from("recipe_shares")
+    .select("recipe_id, shared_by, shared_with_email")
+    .eq("token", token)
+    .single();
+
+  if (!share) notFound();
+
+  const { data: recipe } = await service
     .from("recipes")
     .select("*, ingredients(*), steps(*)")
-    .eq("id", id)
+    .eq("id", share.recipe_id)
     .single();
 
   if (!recipe) notFound();
@@ -34,23 +47,19 @@ export default async function RecipePage({ params }: { params: Promise<{ id: str
       <div className="max-w-2xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <Link href={isOwner ? "/recipes" : "/explore"}>
-            <Button variant="ghost">← Volver</Button>
+          <Link href="/recipes">
+            <Button variant="ghost">← Mis recetas</Button>
           </Link>
-          <div className="flex gap-2">
-            {isOwner ? (
-              <>
-                <ShareRecipeButton recipeId={id} recipeName={r.title} />
-                <Link href={`/recipes/${id}/edit`}>
-                  <Button variant="outline">Editar</Button>
-                </Link>
-                <DeleteRecipeButton recipeId={id} />
-              </>
-            ) : (
-              <CloneRecipeButton recipeId={id} />
-            )}
-          </div>
+          {!isOwner && (
+            <CloneSharedRecipeButton token={token} />
+          )}
         </div>
+
+        {!isOwner && (
+          <div className="bg-muted rounded-lg p-4 text-sm text-muted-foreground">
+            Alguien compartió esta receta con vos. Podés agregarla a tu recetario con el botón de arriba.
+          </div>
+        )}
 
         {/* Image */}
         {r.image_url && (
@@ -63,12 +72,7 @@ export default async function RecipePage({ params }: { params: Promise<{ id: str
 
         {/* Title & meta */}
         <div>
-          <div className="flex items-center gap-3 mb-3">
-            <h1 className="text-3xl font-bold">{r.title}</h1>
-            {r.is_public && (
-              <Badge variant="outline" className="text-green-600 border-green-600">Pública</Badge>
-            )}
-          </div>
+          <h1 className="text-3xl font-bold mb-3">{r.title}</h1>
           <div className="flex gap-2 flex-wrap">
             {r.servings && <Badge variant="secondary">{r.servings} porciones</Badge>}
             {r.prep_time_minutes && <Badge variant="secondary">Prep: {r.prep_time_minutes} min</Badge>}
@@ -77,16 +81,6 @@ export default async function RecipePage({ params }: { params: Promise<{ id: str
           </div>
           {r.description && (
             <p className="mt-3 text-muted-foreground">{r.description}</p>
-          )}
-          {r.source_url && (
-            <a
-              href={r.source_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-blue-500 underline mt-1 block"
-            >
-              Ver receta original
-            </a>
           )}
         </div>
 

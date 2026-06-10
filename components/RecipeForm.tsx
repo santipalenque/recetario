@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { IngredientInput, RecipeWithDetails, StepInput } from "@/lib/types";
@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+const UNITS = ["CN", "unidades", "kg", "g", "lt", "ml", "cdas", "taza", "lata"] as const;
 
 type Props = {
   recipe?: RecipeWithDetails;
@@ -24,13 +26,14 @@ export default function RecipeForm({ recipe }: Props) {
   const [prepTime, setPrepTime] = useState(recipe?.prep_time_minutes?.toString() ?? "");
   const [cookTime, setCookTime] = useState(recipe?.cook_time_minutes?.toString() ?? "");
   const [sourceUrl, setSourceUrl] = useState(recipe?.source_url ?? "");
+  const [isPublic, setIsPublic] = useState(recipe?.is_public ?? false);
 
   const [ingredients, setIngredients] = useState<IngredientInput[]>(
     recipe?.ingredients.map((i) => ({
       name: i.name,
       amount: i.amount?.toString() ?? "",
-      unit: i.unit ?? "",
-    })) ?? [{ name: "", amount: "", unit: "" }]
+      unit: i.unit ?? "CN",
+    })) ?? [{ name: "", amount: "", unit: "CN" }]
   );
 
   const [steps, setSteps] = useState<StepInput[]>(
@@ -39,9 +42,76 @@ export default function RecipeForm({ recipe }: Props) {
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [importUrl, setImportUrl] = useState("");
+  const [importing, setImporting] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [progress, setProgress] = useState(0);
+  const progressInterval = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (importing) {
+      setProgress(0);
+      progressInterval.current = setInterval(() => {
+        setProgress((p) => {
+          // Ease toward 85%, slowing as it approaches
+          const remaining = 85 - p;
+          return p + remaining * 0.06;
+        });
+      }, 200);
+    } else {
+      if (progressInterval.current) clearInterval(progressInterval.current);
+      setProgress(100);
+      const t = setTimeout(() => setProgress(0), 400);
+      return () => clearTimeout(t);
+    }
+    return () => {
+      if (progressInterval.current) clearInterval(progressInterval.current);
+    };
+  }, [importing]);
+
+  async function handleImport() {
+    if (!importUrl.trim()) return;
+    setImporting(true);
+    setImportError(null);
+    try {
+      const res = await fetch("/api/parse-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: importUrl.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        setImportError(data.error ?? "Error al importar");
+        return;
+      }
+      if (data.title) setTitle(data.title);
+      if (data.description) setDescription(data.description);
+      if (data.servings != null) setServings(String(data.servings));
+      if (data.prep_time_minutes != null) setPrepTime(String(data.prep_time_minutes));
+      if (data.cook_time_minutes != null) setCookTime(String(data.cook_time_minutes));
+      if (data.ingredients?.length) {
+        setIngredients(
+          data.ingredients.map((i: { name: string; amount: number | null; unit: string | null }) => ({
+            name: i.name,
+            amount: i.amount != null ? String(i.amount) : "",
+            unit: i.unit ?? "",
+          }))
+        );
+      }
+      if (data.steps?.length) {
+        setSteps(data.steps.map((s: { description: string }) => ({ description: s.description })));
+      }
+      setSourceUrl(importUrl.trim());
+      setImportUrl("");
+    } catch {
+      setImportError("Error de red al importar");
+    } finally {
+      setImporting(false);
+    }
+  }
 
   function addIngredient() {
-    setIngredients([...ingredients, { name: "", amount: "", unit: "" }]);
+    setIngredients([...ingredients, { name: "", amount: "", unit: "CN" }]);
   }
 
   function removeIngredient(index: number) {
@@ -81,6 +151,7 @@ export default function RecipeForm({ recipe }: Props) {
       prep_time_minutes: prepTime ? parseInt(prepTime) : null,
       cook_time_minutes: cookTime ? parseInt(cookTime) : null,
       source_url: sourceUrl.trim() || null,
+      is_public: isPublic,
       user_id: user.id,
       updated_at: new Date().toISOString(),
     };
@@ -139,6 +210,41 @@ export default function RecipeForm({ recipe }: Props) {
       </div>
 
       {error && <p className="text-sm text-red-500 bg-red-50 p-3 rounded">{error}</p>}
+
+      {/* URL importer */}
+      <Card>
+        <CardHeader><CardTitle>Importar desde URL</CardTitle></CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex gap-2">
+            <Input
+              type="url"
+              placeholder="https://..."
+              value={importUrl}
+              onChange={(e) => setImportUrl(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleImport())}
+              disabled={importing}
+            />
+            <Button type="button" onClick={handleImport} disabled={importing || !importUrl.trim()}>
+              {importing ? "Importando..." : "Importar"}
+            </Button>
+          </div>
+          {/* Progress bar */}
+          {progress > 0 && (
+            <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+              <div
+                className="h-full bg-primary rounded-full transition-all duration-200 ease-out"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          )}
+          {importError && <p className="text-sm text-red-500">{importError}</p>}
+        </CardContent>
+      </Card>
+
+      {/* Disable all form fields while importing */}
+      <div
+        className={`space-y-6 transition-opacity duration-200 ${importing ? "opacity-50 pointer-events-none select-none" : ""}`}
+      >
 
       {/* Basic info */}
       <Card>
@@ -208,6 +314,21 @@ export default function RecipeForm({ recipe }: Props) {
               placeholder="https://..."
             />
           </div>
+          <label className="flex items-center gap-3 cursor-pointer select-none">
+            <div
+              role="checkbox"
+              aria-checked={isPublic}
+              onClick={() => setIsPublic(!isPublic)}
+              className={`relative w-10 h-6 rounded-full transition-colors ${isPublic ? "bg-green-500" : "bg-muted-foreground/30"}`}
+            >
+              <span
+                className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${isPublic ? "translate-x-4" : "translate-x-0"}`}
+              />
+            </div>
+            <span className="text-sm font-medium">
+              {isPublic ? "Receta pública — otros usuarios pueden verla y agregarla" : "Receta privada"}
+            </span>
+          </label>
         </CardContent>
       </Card>
 
@@ -229,12 +350,15 @@ export default function RecipeForm({ recipe }: Props) {
                 value={ing.amount}
                 onChange={(e) => updateIngredient(idx, "amount", e.target.value)}
               />
-              <Input
-                className="w-24"
-                placeholder="Unidad"
+              <select
+                className="w-28 h-9 rounded-md border border-input bg-background px-2 text-sm"
                 value={ing.unit}
                 onChange={(e) => updateIngredient(idx, "unit", e.target.value)}
-              />
+              >
+                {UNITS.map((u) => (
+                  <option key={u} value={u}>{u}</option>
+                ))}
+              </select>
               <Button
                 type="button"
                 variant="ghost"
@@ -288,6 +412,8 @@ export default function RecipeForm({ recipe }: Props) {
       <Button type="submit" className="w-full" disabled={saving}>
         {saving ? "Guardando..." : isEditing ? "Guardar cambios" : "Crear receta"}
       </Button>
+
+      </div>
     </form>
   );
 }
