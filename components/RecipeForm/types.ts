@@ -6,6 +6,7 @@ export interface FormValues {
   cookTime: string;
   sourceUrl: string;
   isPublic: boolean;
+  tags: string[];
   ingredients: { name: string; amount: string; unit: string }[];
   steps: { description: string }[];
 }

@@ -11,6 +11,7 @@ export type RecipeData = {
   source_url: string | null;
   image_url?: string | null;
   is_public: boolean;
+  tags?: string[];
   user_id: string;
   updated_at?: string;
 };

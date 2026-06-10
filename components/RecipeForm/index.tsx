@@ -11,6 +11,7 @@ import {
 } from "@/utils/actions";
 import type { RecipeWithDetails } from "@/lib/types";
 import type { FormValues } from "./types";
+import { RECIPE_TAGS } from "@/utils/constants";
 import ImportSection from "./components/ImportSection";
 import IngredientsSection from "./components/IngredientsSection";
 import StepsSection from "./components/StepsSection";
@@ -19,6 +20,7 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
+import Chip from "@mui/material/Chip";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Switch from "@mui/material/Switch";
 import TextField from "@mui/material/TextField";
@@ -37,6 +39,7 @@ export default function RecipeForm({ recipe }: { recipe?: RecipeWithDetails }) {
     cookTime: recipe?.cook_time_minutes?.toString() ?? "",
     sourceUrl: recipe?.source_url ?? "",
     isPublic: recipe?.is_public ?? false,
+    tags: recipe?.tags ?? [],
     ingredients: recipe?.ingredients.map((i) => ({
       name: i.name, amount: i.amount?.toString() ?? "", unit: i.unit ?? "CN",
     })) ?? [{ name: "", amount: "", unit: "CN" }],
@@ -59,6 +62,7 @@ export default function RecipeForm({ recipe }: { recipe?: RecipeWithDetails }) {
       cook_time_minutes: values.cookTime ? parseInt(values.cookTime) : null,
       source_url: values.sourceUrl.trim() || null,
       is_public: values.isPublic,
+      tags: values.tags,
       user_id: user.id,
       updated_at: new Date().toISOString(),
     };
@@ -117,6 +121,29 @@ export default function RecipeForm({ recipe }: { recipe?: RecipeWithDetails }) {
                 <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>Información básica</Typography>
                 <TextField label="Título *" value={values.title} onChange={(e) => setFieldValue("title", e.target.value)} placeholder="Ej: Milanesas a la napolitana" required size="small" fullWidth />
                 <TextField label="Descripción" value={values.description} onChange={(e) => setFieldValue("description", e.target.value)} placeholder="Descripción breve..." multiline rows={3} size="small" fullWidth />
+                <Box>
+                  <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: "block" }}>Categoría</Typography>
+                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+                    {RECIPE_TAGS.map((tag) => {
+                      const selected = values.tags.includes(tag);
+                      return (
+                        <Chip
+                          key={tag}
+                          label={tag}
+                          clickable
+                          color={selected ? "primary" : "default"}
+                          variant={selected ? "filled" : "outlined"}
+                          onClick={() => {
+                            const next = selected
+                              ? values.tags.filter((t) => t !== tag)
+                              : [...values.tags, tag];
+                            setFieldValue("tags", next);
+                          }}
+                        />
+                      );
+                    })}
+                  </Box>
+                </Box>
                 <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 2 }}>
                   <TextField label="Porciones" type="number" slotProps={{ htmlInput: { min: 1 } }} value={values.servings} onChange={(e) => setFieldValue("servings", e.target.value)} size="small" />
                   <TextField label="Prep (min)" type="number" slotProps={{ htmlInput: { min: 0 } }} value={values.prepTime} onChange={(e) => setFieldValue("prepTime", e.target.value)} placeholder="15" size="small" />

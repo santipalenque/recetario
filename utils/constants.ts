@@ -1,4 +1,7 @@
 export const UNITS = ["CN", "unidades", "kg", "g", "lt", "ml", "cdas", "taza", "lata"] as const;
+
+export const RECIPE_TAGS = ["Principal", "Entrada", "Postre", "Guarnicion", "Dip"] as const;
+export type RecipeTag = (typeof RECIPE_TAGS)[number];
 export type Unit = (typeof UNITS)[number];
 
 export const SYSTEM_PROMPT = `Eres un extractor de recetas. Se te dará el contenido de una página web en markdown.

@@ -9,6 +9,7 @@ export type Recipe = {
   image_url: string | null;
   source_url: string | null;
   is_public: boolean;
+  tags: string[];
   created_at: string;
   updated_at: string;
 };
