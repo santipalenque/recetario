@@ -2,41 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { anthropic } from "@/lib/anthropic";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
-
-const VALID_UNITS = ["unidades", "kg", "g", "lt", "ml", "cdas", "taza", "lata"] as const;
-type Unit = (typeof VALID_UNITS)[number];
-
-const SYSTEM_PROMPT = `Eres un extractor de recetas. Se te dará el contenido de una página web en markdown.
-Tu tarea es extraer la receta y devolverla ÚNICAMENTE como JSON válido con esta estructura exacta:
-
-{
-  "title": "string",
-  "description": "string o null — resumen del proceso de cocción en 2-3 oraciones",
-  "servings": number o null,
-  "prep_time_minutes": number o null,
-  "cook_time_minutes": number o null,
-  "ingredients": [
-    { "name": "string", "amount": number o null, "unit": "unidades" | "kg" | "g" | "lt" | "ml" | "cdas" | "taza" | "lata" | "CN" }
-  ],
-  "steps": [
-    { "description": "string" }
-  ]
-}
-
-Reglas para ingredientes:
-- Separar siempre la cantidad, la unidad y el nombre. Ejemplo: "½ kg. de Paleta" → name:"Paleta", amount:0.5, unit:"kg".
-- Convertir fracciones a decimales (½→0.5, ¼→0.25, ¾→0.75).
-- Las unidades válidas son SOLO: unidades, kg, g, lt, ml, cdas, taza, lata. Mapear cualquier variante a la más cercana (cucharadas→cdas, cucharaditas→cdas, litros→lt, gramos→g, kilogramos→kg, mililitros→ml, tazas→taza, latas→lata, unidad→unidades, u.→unidades).
-- Si hay cantidad pero no hay unidad de medida (ej: "2 cebollas") → unit:"unidades".
-- Si no hay ni cantidad ni unidad (ej: "Sal", "Aceite") → amount:null, unit:"CN".
-- Para los tiempos, buscar tanto en campos explícitos como dentro del texto de los pasos (ej: "cocinar por 2 hs" → cook_time_minutes:120). Si no se menciona, usar null.
-- Si no encontrás una receta en el contenido, devuelve: { "error": "No se encontró una receta en esta URL" }
-- No incluyas texto fuera del JSON.`;
+import { UNITS, SYSTEM_PROMPT, type Unit } from "@/utils/constants";
 
 type ParsedIngredient = { name: string; amount: number | null; unit: string };
 
 function normalizeIngredient(ing: ParsedIngredient): ParsedIngredient {
-  if (ing.unit === "CN" || VALID_UNITS.includes(ing.unit as Unit)) return ing;
+  if (ing.unit === "CN" || UNITS.includes(ing.unit as Unit)) return ing;
   // Fallback normalization in case Claude uses an unlisted unit
   const u = ing.unit?.toLowerCase().trim() ?? "";
   const map: Record<string, Unit> = {

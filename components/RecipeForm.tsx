@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Formik, Form, FieldArray } from "formik";
 import { createClient } from "@/lib/supabase/client";
 import type { RecipeWithDetails } from "@/lib/types";
+import { UNITS } from "@/utils/constants";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
@@ -19,8 +20,6 @@ import Alert from "@mui/material/Alert";
 import IconButton from "@mui/material/IconButton";
 import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add";
-
-const UNITS = ["CN", "unidades", "kg", "g", "lt", "ml", "cdas", "taza", "lata"] as const;
 
 interface FormValues {
   title: string;
