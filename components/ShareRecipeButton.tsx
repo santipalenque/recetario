@@ -7,13 +7,16 @@ import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
+import IconButton from "@mui/material/IconButton";
 import TextField from "@mui/material/TextField";
+import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
+import ShareIcon from "@mui/icons-material/Share";
 
 type Props = {
   recipeId: string;
   recipeName: string;
-  variant?: "outlined" | "text" | "contained";
+  variant?: "outlined" | "text" | "contained" | "icon";
   size?: "small" | "medium" | "large";
 };
 
@@ -48,11 +51,22 @@ export default function ShareRecipeButton({ recipeId, recipeName, variant = "out
     setResult(null);
   }
 
+  const trigger = variant === "icon" ? (
+    <Tooltip title="Compartir">
+      <IconButton size={size} onClick={(e) => { e.stopPropagation(); e.preventDefault(); setOpen(true); }}
+        sx={{ bgcolor: "background.paper", boxShadow: 1, "&:hover": { bgcolor: "background.paper" } }}>
+        <ShareIcon fontSize="small" />
+      </IconButton>
+    </Tooltip>
+  ) : (
+    <Button variant={variant} size={size} onClick={(e) => { e.stopPropagation(); setOpen(true); }}>
+      Compartir
+    </Button>
+  );
+
   return (
     <>
-      <Button variant={variant} size={size} onClick={(e) => { e.stopPropagation(); setOpen(true); }}>
-        Compartir
-      </Button>
+      {trigger}
       <Dialog open={open} onClose={handleClose} onClick={(e) => e.stopPropagation()} fullWidth maxWidth="xs">
         <DialogTitle>Compartir &ldquo;{recipeName}&rdquo;</DialogTitle>
         <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: "16px !important" }}>

@@ -6,7 +6,6 @@ import Card from "@mui/material/Card";
 import CardActionArea from "@mui/material/CardActionArea";
 import CardMedia from "@mui/material/CardMedia";
 import CardContent from "@mui/material/CardContent";
-import CardActions from "@mui/material/CardActions";
 import Typography from "@mui/material/Typography";
 import Chip from "@mui/material/Chip";
 import Box from "@mui/material/Box";
@@ -21,7 +20,12 @@ export default function RecipeCard({ recipe, showShare = false }: Props) {
   const totalTime = (recipe.prep_time_minutes ?? 0) + (recipe.cook_time_minutes ?? 0);
 
   return (
-    <Card sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+    <Card sx={{ height: "100%", display: "flex", flexDirection: "column", position: "relative" }}>
+      {showShare && (
+        <Box sx={{ position: "absolute", top: 8, right: 8, zIndex: 1 }}>
+          <ShareRecipeButton recipeId={recipe.id} recipeName={recipe.title} variant="icon" />
+        </Box>
+      )}
       <CardActionArea component={Link} href={`/recipes/${recipe.id}`} sx={{ flex: 1 }}>
         {recipe.image_url && (
           <CardMedia
@@ -53,11 +57,6 @@ export default function RecipeCard({ recipe, showShare = false }: Props) {
           </Box>
         </CardContent>
       </CardActionArea>
-      {showShare && (
-        <CardActions sx={{ borderTop: 1, borderColor: "divider", px: 2 }}>
-          <ShareRecipeButton recipeId={recipe.id} recipeName={recipe.title} size="small" />
-        </CardActions>
-      )}
     </Card>
   );
 }
