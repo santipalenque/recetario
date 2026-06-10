@@ -27,7 +27,7 @@ export default function RecipeSearch() {
     return () => {
       if (debounce.current) clearTimeout(debounce.current);
     };
-  }, [value]);
+  }, [value, pathname, router, searchParams]);
 
   return (
     <TextField

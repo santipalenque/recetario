@@ -59,6 +59,7 @@ export default function RecipeForm({ recipe }: Props) {
 
   useEffect(() => {
     if (importing) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setProgress(0);
       progressInterval.current = setInterval(() => {
         setProgress((p) => {
