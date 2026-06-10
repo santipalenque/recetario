@@ -2,8 +2,11 @@ import { createClient } from "@/lib/supabase/server";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import type { RecipeWithDetails } from "@/lib/types";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Chip from "@mui/material/Chip";
+import Container from "@mui/material/Container";
+import Typography from "@mui/material/Typography";
 import DeleteRecipeButton from "@/components/DeleteRecipeButton";
 import CloneRecipeButton from "@/components/CloneRecipeButton";
 import ShareRecipeButton from "@/components/ShareRecipeButton";
@@ -30,98 +33,98 @@ export default async function RecipePage({ params }: { params: Promise<{ id: str
   const totalTime = (r.prep_time_minutes ?? 0) + (r.cook_time_minutes ?? 0);
 
   return (
-    <div className="min-h-screen p-8">
-      <div className="max-w-2xl mx-auto space-y-6">
+    <Container maxWidth="md" sx={{ py: 4 }}>
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <Link href={isOwner ? "/recipes" : "/explore"}>
-            <Button variant="ghost">← Volver</Button>
-          </Link>
-          <div className="flex gap-2">
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <Button component={Link} href={isOwner ? "/recipes" : "/explore"} variant="text">
+            ← Volver
+          </Button>
+          <Box sx={{ display: "flex", gap: 1 }}>
             {isOwner ? (
               <>
                 <ShareRecipeButton recipeId={id} recipeName={r.title} />
-                <Link href={`/recipes/${id}/edit`}>
-                  <Button variant="outline">Editar</Button>
-                </Link>
+                <Button component={Link} href={`/recipes/${id}/edit`} variant="outlined">
+                  Editar
+                </Button>
                 <DeleteRecipeButton recipeId={id} />
               </>
             ) : (
               <CloneRecipeButton recipeId={id} />
             )}
-          </div>
-        </div>
+          </Box>
+        </Box>
 
         {/* Image */}
         {r.image_url && (
-          <img
+          <Box
+            component="img"
             src={r.image_url}
             alt={r.title}
-            className="w-full h-64 object-cover rounded-lg"
+            sx={{ width: "100%", height: 280, objectFit: "cover", borderRadius: 2 }}
           />
         )}
 
         {/* Title & meta */}
-        <div>
-          <div className="flex items-center gap-3 mb-3">
-            <h1 className="text-3xl font-bold">{r.title}</h1>
-            {r.is_public && (
-              <Badge variant="outline" className="text-green-600 border-green-600">Pública</Badge>
-            )}
-          </div>
-          <div className="flex gap-2 flex-wrap">
-            {r.servings && <Badge variant="secondary">{r.servings} porciones</Badge>}
-            {r.prep_time_minutes && <Badge variant="secondary">Prep: {r.prep_time_minutes} min</Badge>}
-            {r.cook_time_minutes && <Badge variant="secondary">Cocción: {r.cook_time_minutes} min</Badge>}
-            {totalTime > 0 && <Badge>Total: {totalTime} min</Badge>}
-          </div>
+        <Box>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 1.5 }}>
+            <Typography variant="h4" sx={{ fontWeight: 'bold' }}>{r.title}</Typography>
+            {r.is_public && <Chip label="Pública" color="success" variant="outlined" size="small" />}
+          </Box>
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+            {r.servings && <Chip label={`${r.servings} porciones`} size="small" />}
+            {r.prep_time_minutes && <Chip label={`Prep: ${r.prep_time_minutes} min`} size="small" />}
+            {r.cook_time_minutes && <Chip label={`Cocción: ${r.cook_time_minutes} min`} size="small" />}
+            {totalTime > 0 && <Chip label={`Total: ${totalTime} min`} size="small" color="primary" />}
+          </Box>
           {r.description && (
-            <p className="mt-3 text-muted-foreground">{r.description}</p>
+            <Typography color="text.secondary" sx={{ mt: 1.5 }}>{r.description}</Typography>
           )}
           {r.source_url && (
-            <a
-              href={r.source_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-blue-500 underline mt-1 block"
-            >
-              Ver receta original
-            </a>
+            <Typography variant="body2" sx={{ mt: 1 }}>
+              <a href={r.source_url} target="_blank" rel="noopener noreferrer" style={{ color: "#1976d2" }}>
+                Ver receta original
+              </a>
+            </Typography>
           )}
-        </div>
+        </Box>
 
         {/* Ingredients */}
         {ingredients.length > 0 && (
-          <div>
-            <h2 className="text-xl font-semibold mb-3">Ingredientes</h2>
-            <ul className="space-y-1">
+          <Box>
+            <Typography variant="h6" sx={{ mb: 1.5, fontWeight: 600 }}>Ingredientes</Typography>
+            <Box component="ul" sx={{ m: 0, pl: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 0.5 }}>
               {ingredients.map((ing) => (
-                <li key={ing.id} className="flex gap-2">
-                  <span className="font-medium">
+                <Box component="li" key={ing.id} sx={{ display: "flex", gap: 1 }}>
+                  <Typography sx={{ fontWeight: 500 }}>
                     {ing.amount && `${ing.amount} `}{ing.unit && `${ing.unit} `}
-                  </span>
-                  <span>{ing.name}</span>
-                </li>
+                  </Typography>
+                  <Typography>{ing.name}</Typography>
+                </Box>
               ))}
-            </ul>
-          </div>
+            </Box>
+          </Box>
         )}
 
         {/* Steps */}
         {steps.length > 0 && (
-          <div>
-            <h2 className="text-xl font-semibold mb-3">Preparación</h2>
-            <ol className="space-y-4">
+          <Box>
+            <Typography variant="h6" sx={{ mb: 1.5, fontWeight: 600 }}>Preparación</Typography>
+            <Box component="ol" sx={{ m: 0, pl: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 2 }}>
               {steps.map((step, idx) => (
-                <li key={step.id} className="flex gap-3">
-                  <span className="font-bold text-muted-foreground shrink-0">{idx + 1}.</span>
-                  <p>{step.description}</p>
-                </li>
+                <Box component="li" key={step.id} sx={{ display: "flex", gap: 2 }}>
+                  <Typography color="text.secondary" sx={{ minWidth: 24, fontWeight: 'bold' }}>
+                    {idx + 1}.
+                  </Typography>
+                  <Typography>{step.description}</Typography>
+                </Box>
               ))}
-            </ol>
-          </div>
+            </Box>
+          </Box>
         )}
-      </div>
-    </div>
+
+      </Box>
+    </Container>
   );
 }

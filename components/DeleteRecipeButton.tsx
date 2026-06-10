@@ -3,16 +3,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import Button from "@mui/material/Button";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogContentText from "@mui/material/DialogContentText";
+import DialogActions from "@mui/material/DialogActions";
 
 export default function DeleteRecipeButton({ recipeId }: { recipeId: string }) {
   const router = useRouter();
@@ -28,24 +24,24 @@ export default function DeleteRecipeButton({ recipeId }: { recipeId: string }) {
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button variant="destructive" />}>
+    <>
+      <Button variant="contained" color="error" onClick={() => setOpen(true)}>
         Eliminar
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>¿Eliminar receta?</DialogTitle>
-          <DialogDescription>
+      </Button>
+      <Dialog open={open} onClose={() => setOpen(false)}>
+        <DialogTitle>¿Eliminar receta?</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
             Esta acción no se puede deshacer. La receta y todos sus ingredientes y pasos serán eliminados.
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-          <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpen(false)}>Cancelar</Button>
+          <Button color="error" variant="contained" onClick={handleDelete} disabled={deleting}>
             {deleting ? "Eliminando..." : "Sí, eliminar"}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 }

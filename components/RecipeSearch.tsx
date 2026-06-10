@@ -2,7 +2,9 @@
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Input } from "@/components/ui/input";
+import TextField from "@mui/material/TextField";
+import InputAdornment from "@mui/material/InputAdornment";
+import SearchIcon from "@mui/icons-material/Search";
 
 export default function RecipeSearch() {
   const router = useRouter();
@@ -28,12 +30,22 @@ export default function RecipeSearch() {
   }, [value]);
 
   return (
-    <Input
+    <TextField
       type="search"
       placeholder="Buscar por título o ingrediente..."
       value={value}
       onChange={(e) => setValue(e.target.value)}
-      className="max-w-sm"
+      size="small"
+      sx={{ maxWidth: 400 }}
+      slotProps={{
+        input: {
+          startAdornment: (
+            <InputAdornment position="start">
+              <SearchIcon fontSize="small" />
+            </InputAdornment>
+          ),
+        },
+      }}
     />
   );
 }

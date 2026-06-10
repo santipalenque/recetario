@@ -1,26 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import Button from "@mui/material/Button";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
 
 type Props = {
   recipeId: string;
   recipeName: string;
-  variant?: "outline" | "ghost" | "default";
-  size?: "sm" | "default";
+  variant?: "outlined" | "text" | "contained";
+  size?: "small" | "medium" | "large";
 };
 
-export default function ShareRecipeButton({ recipeId, recipeName, variant = "outline", size = "default" }: Props) {
+export default function ShareRecipeButton({ recipeId, recipeName, variant = "outlined", size = "medium" }: Props) {
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [sending, setSending] = useState(false);
@@ -50,48 +46,44 @@ export default function ShareRecipeButton({ recipeId, recipeName, variant = "out
     }
   }
 
-  function handleOpenChange(val: boolean) {
-    setOpen(val);
-    if (!val) { setEmail(""); setResult(null); }
+  function handleClose() {
+    setOpen(false);
+    setEmail("");
+    setResult(null);
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        <Button variant={variant} size={size} onClick={(e) => e.stopPropagation()}>
-          Compartir
-        </Button>
-      </DialogTrigger>
-      <DialogContent onClick={(e) => e.stopPropagation()}>
-        <DialogHeader>
-          <DialogTitle>Compartir &ldquo;{recipeName}&rdquo;</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-3 py-2">
-          <div className="space-y-1.5">
-            <Label htmlFor="share-email">Email del destinatario</Label>
-            <Input
-              id="share-email"
-              type="email"
-              placeholder="amigo@ejemplo.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleShare()}
-              disabled={sending}
-            />
-          </div>
+    <>
+      <Button variant={variant} size={size} onClick={(e) => { e.stopPropagation(); setOpen(true); }}>
+        Compartir
+      </Button>
+      <Dialog open={open} onClose={handleClose} onClick={(e) => e.stopPropagation()} fullWidth maxWidth="xs">
+        <DialogTitle>Compartir &ldquo;{recipeName}&rdquo;</DialogTitle>
+        <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: "16px !important" }}>
+          <TextField
+            label="Email del destinatario"
+            type="email"
+            placeholder="amigo@ejemplo.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleShare()}
+            disabled={sending}
+            size="small"
+            fullWidth
+          />
           {result && (
-            <p className={`text-sm ${result.ok ? "text-green-600" : "text-red-500"}`}>
+            <Typography variant="body2" color={result.ok ? "success.main" : "error.main"}>
               {result.message}
-            </p>
+            </Typography>
           )}
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => handleOpenChange(false)}>Cancelar</Button>
-          <Button onClick={handleShare} disabled={sending || !email.trim()}>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose}>Cancelar</Button>
+          <Button variant="contained" onClick={handleShare} disabled={sending || !email.trim()}>
             {sending ? "Enviando..." : "Enviar"}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 }

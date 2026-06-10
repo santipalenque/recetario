@@ -1,7 +1,5 @@
 import { Resend } from "resend";
 
-export const resend = new Resend(process.env.RESEND_API_KEY);
-
 export function shareRecipeEmail({
   recipientEmail,
   senderEmail,
@@ -13,6 +11,7 @@ export function shareRecipeEmail({
   recipeName: string;
   shareUrl: string;
 }) {
+  const resend = new Resend(process.env.RESEND_API_KEY);
   return resend.emails.send({
     from: "Recetario <noreply@resend.dev>",
     to: recipientEmail,

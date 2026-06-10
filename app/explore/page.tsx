@@ -4,8 +4,11 @@ import Link from "next/link";
 import type { Recipe } from "@/lib/types";
 import RecipeCard from "@/components/RecipeCard";
 import RecipeSearch from "@/components/RecipeSearch";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Container from "@mui/material/Container";
+import Typography from "@mui/material/Typography";
 import { Suspense } from "react";
-import { Button } from "@/components/ui/button";
 
 export default async function ExplorePage({
   searchParams,
@@ -37,9 +40,7 @@ export default async function ExplorePage({
       .order("created_at", { ascending: false });
 
     if (ingredientIds.length > 0) {
-      dbQuery = dbQuery.or(
-        `title.ilike.%${query}%,id.in.(${ingredientIds.join(",")})`
-      );
+      dbQuery = dbQuery.or(`title.ilike.%${query}%,id.in.(${ingredientIds.join(",")})`);
     } else {
       dbQuery = dbQuery.ilike("title", `%${query}%`);
     }
@@ -57,44 +58,38 @@ export default async function ExplorePage({
   }
 
   return (
-    <div className="min-h-screen p-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-3xl font-bold">Explorar</h1>
-            <p className="text-muted-foreground text-sm mt-1">Recetas públicas de otros usuarios</p>
-          </div>
-          <Link href="/recipes">
-            <Button variant="outline">Mis recetas</Button>
-          </Link>
-        </div>
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", mb: 3 }}>
+        <Box>
+          <Typography variant="h4" sx={{ fontWeight: 'bold' }}>Explorar</Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+            Recetas públicas de otros usuarios
+          </Typography>
+        </Box>
+        <Button component={Link} href="/recipes" variant="outlined">Mis recetas</Button>
+      </Box>
 
-        <div className="mb-6">
-          <Suspense>
-            <RecipeSearch />
-          </Suspense>
-        </div>
+      <Box sx={{ mb: 3 }}>
+        <Suspense>
+          <RecipeSearch />
+        </Suspense>
+      </Box>
 
-        {recipes.length === 0 ? (
-          <div className="text-center py-20">
-            {query ? (
-              <p className="text-muted-foreground text-lg">
-                No se encontraron recetas públicas para <strong>&ldquo;{query}&rdquo;</strong>.
-              </p>
-            ) : (
-              <p className="text-muted-foreground text-lg">
-                Todavía no hay recetas públicas de otros usuarios.
-              </p>
-            )}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {recipes.map((recipe) => (
-              <RecipeCard key={recipe.id} recipe={recipe} />
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
+      {recipes.length === 0 ? (
+        <Box sx={{ textAlign: "center", py: 10 }}>
+          <Typography color="text.secondary">
+            {query
+              ? <>No se encontraron recetas públicas para <strong>&ldquo;{query}&rdquo;</strong>.</>
+              : "Todavía no hay recetas públicas de otros usuarios."}
+          </Typography>
+        </Box>
+      ) : (
+        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr", md: "1fr 1fr 1fr" }, gap: 2 }}>
+          {recipes.map((recipe) => (
+            <RecipeCard key={recipe.id} recipe={recipe} />
+          ))}
+        </Box>
+      )}
+    </Container>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Button } from "@/components/ui/button";
+import Button from "@mui/material/Button";
 import { cloneRecipe } from "@/app/actions";
 
 export default function CloneRecipeButton({ recipeId }: { recipeId: string }) {
@@ -16,8 +16,8 @@ export default function CloneRecipeButton({ recipeId }: { recipeId: string }) {
   }
 
   return (
-    <Button onClick={handleClone} disabled={isPending || done}>
-      {isPending ? "Agregando..." : done ? "Agregada" : "Agregar a mis recetas"}
+    <Button variant="contained" onClick={handleClone} disabled={isPending || done}>
+      {isPending ? "Agregando..." : done ? "Agregada ✓" : "Agregar a mis recetas"}
     </Button>
   );
 }

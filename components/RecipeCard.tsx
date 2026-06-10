@@ -1,7 +1,15 @@
+"use client";
+
 import Link from "next/link";
 import type { Recipe } from "@/lib/types";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import Card from "@mui/material/Card";
+import CardActionArea from "@mui/material/CardActionArea";
+import CardMedia from "@mui/material/CardMedia";
+import CardContent from "@mui/material/CardContent";
+import CardActions from "@mui/material/CardActions";
+import Typography from "@mui/material/Typography";
+import Chip from "@mui/material/Chip";
+import Box from "@mui/material/Box";
 import ShareRecipeButton from "@/components/ShareRecipeButton";
 
 type Props = {
@@ -13,39 +21,42 @@ export default function RecipeCard({ recipe, showShare = false }: Props) {
   const totalTime = (recipe.prep_time_minutes ?? 0) + (recipe.cook_time_minutes ?? 0);
 
   return (
-    <Card className="h-full hover:shadow-md transition-shadow flex flex-col">
-      <Link href={`/recipes/${recipe.id}`} className="flex-1 block">
+    <Card sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+      <CardActionArea component={Link} href={`/recipes/${recipe.id}`} sx={{ flex: 1 }}>
         {recipe.image_url && (
-          <img
-            src={recipe.image_url}
+          <CardMedia
+            component="img"
+            height={160}
+            image={recipe.image_url}
             alt={recipe.title}
-            className="w-full h-40 object-cover rounded-t-lg"
           />
         )}
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg leading-tight">{recipe.title}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
+        <CardContent>
+          <Typography variant="h6" gutterBottom sx={{ lineHeight: 1.3 }}>
+            {recipe.title}
+          </Typography>
           {recipe.description && (
-            <p className="text-sm text-muted-foreground line-clamp-2">{recipe.description}</p>
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ mb: 1, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}
+            >
+              {recipe.description}
+            </Typography>
           )}
-          <div className="flex gap-2 flex-wrap">
-            {recipe.servings && (
-              <Badge variant="secondary">{recipe.servings} porciones</Badge>
-            )}
-            {totalTime > 0 && (
-              <Badge variant="secondary">{totalTime} min</Badge>
-            )}
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+            {recipe.servings && <Chip size="small" label={`${recipe.servings} porciones`} />}
+            {totalTime > 0 && <Chip size="small" label={`${totalTime} min`} />}
             {recipe.is_public && (
-              <Badge variant="outline" className="text-green-600 border-green-600">Pública</Badge>
+              <Chip size="small" label="Pública" color="success" variant="outlined" />
             )}
-          </div>
+          </Box>
         </CardContent>
-      </Link>
+      </CardActionArea>
       {showShare && (
-        <div className="px-6 pb-4 pt-2 border-t">
-          <ShareRecipeButton recipeId={recipe.id} recipeName={recipe.title} variant="outline" size="sm" />
-        </div>
+        <CardActions sx={{ borderTop: 1, borderColor: "divider", px: 2 }}>
+          <ShareRecipeButton recipeId={recipe.id} recipeName={recipe.title} size="small" />
+        </CardActions>
       )}
     </Card>
   );

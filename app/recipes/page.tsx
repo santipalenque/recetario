@@ -4,7 +4,10 @@ import Link from "next/link";
 import type { Recipe } from "@/lib/types";
 import RecipeCard from "@/components/RecipeCard";
 import RecipeSearch from "@/components/RecipeSearch";
-import { Button } from "@/components/ui/button";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Container from "@mui/material/Container";
+import Typography from "@mui/material/Typography";
 import { Suspense } from "react";
 
 export default async function RecipesPage({
@@ -22,7 +25,6 @@ export default async function RecipesPage({
   let recipes: Recipe[] = [];
 
   if (query) {
-    // Find recipe IDs whose ingredients match the query
     const { data: ingredientMatches } = await supabase
       .from("ingredients")
       .select("recipe_id")
@@ -37,9 +39,7 @@ export default async function RecipesPage({
       .order("created_at", { ascending: false });
 
     if (ingredientIds.length > 0) {
-      dbQuery = dbQuery.or(
-        `title.ilike.%${query}%,id.in.(${ingredientIds.join(",")})`
-      );
+      dbQuery = dbQuery.or(`title.ilike.%${query}%,id.in.(${ingredientIds.join(",")})`);
     } else {
       dbQuery = dbQuery.ilike("title", `%${query}%`);
     }
@@ -55,52 +55,46 @@ export default async function RecipesPage({
   }
 
   return (
-    <div className="min-h-screen p-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold">Mis recetas</h1>
-          <div className="flex gap-3">
-            <Link href="/explore">
-              <Button variant="outline">Explorar</Button>
-            </Link>
-            <Link href="/recipes/new">
-              <Button>+ Nueva receta</Button>
-            </Link>
-            <form action="/auth/logout" method="POST">
-              <Button variant="outline" type="submit">Salir</Button>
-            </form>
-          </div>
-        </div>
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 3 }}>
+        <Typography variant="h4" sx={{ fontWeight: 'bold' }}>Mis recetas</Typography>
+        <Box sx={{ display: "flex", gap: 1 }}>
+          <Button component={Link} href="/explore" variant="outlined">Explorar</Button>
+          <Button component={Link} href="/recipes/new" variant="contained">+ Nueva receta</Button>
+          <form action="/auth/logout" method="POST">
+            <Button variant="outlined" type="submit">Salir</Button>
+          </form>
+        </Box>
+      </Box>
 
-        <div className="mb-6">
-          <Suspense>
-            <RecipeSearch />
-          </Suspense>
-        </div>
+      <Box sx={{ mb: 3 }}>
+        <Suspense>
+          <RecipeSearch />
+        </Suspense>
+      </Box>
 
-        {recipes.length === 0 ? (
-          <div className="text-center py-20">
-            {query ? (
-              <p className="text-muted-foreground text-lg">
-                No se encontraron recetas para <strong>&ldquo;{query}&rdquo;</strong>.
-              </p>
-            ) : (
-              <>
-                <p className="text-muted-foreground text-lg mb-4">Todavía no tenés recetas.</p>
-                <Link href="/recipes/new">
-                  <Button>Crear mi primera receta</Button>
-                </Link>
-              </>
-            )}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {recipes.map((recipe) => (
-              <RecipeCard key={recipe.id} recipe={recipe} showShare />
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
+      {recipes.length === 0 ? (
+        <Box sx={{ textAlign: "center", py: 10 }}>
+          {query ? (
+            <Typography color="text.secondary">
+              No se encontraron recetas para <strong>&ldquo;{query}&rdquo;</strong>.
+            </Typography>
+          ) : (
+            <>
+              <Typography color="text.secondary" sx={{ mb: 2 }}>Todavía no tenés recetas.</Typography>
+              <Button component={Link} href="/recipes/new" variant="contained">
+                Crear mi primera receta
+              </Button>
+            </>
+          )}
+        </Box>
+      ) : (
+        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr", md: "1fr 1fr 1fr" }, gap: 2 }}>
+          {recipes.map((recipe) => (
+            <RecipeCard key={recipe.id} recipe={recipe} showShare />
+          ))}
+        </Box>
+      )}
+    </Container>
   );
 }
