@@ -1,12 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import type { Recipe } from "@/lib/types";
+import { getUserRecipes, searchIngredientIds, searchUserRecipes } from "@/utils/actions";
 import RecipeCard from "@/components/RecipeCard";
 import RecipeSearch from "@/components/RecipeSearch";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Container from "@mui/material/Container";
+import Link from "next/link";
 import Typography from "@mui/material/Typography";
 import { Suspense } from "react";
 
@@ -25,39 +26,18 @@ export default async function RecipesPage({
   let recipes: Recipe[] = [];
 
   if (query) {
-    const { data: ingredientMatches } = await supabase
-      .from("ingredients")
-      .select("recipe_id")
-      .ilike("name", `%${query}%`);
-
-    const ingredientIds = (ingredientMatches ?? []).map((i) => i.recipe_id);
-
-    let dbQuery = supabase
-      .from("recipes")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false });
-
-    if (ingredientIds.length > 0) {
-      dbQuery = dbQuery.or(`title.ilike.%${query}%,id.in.(${ingredientIds.join(",")})`);
-    } else {
-      dbQuery = dbQuery.ilike("title", `%${query}%`);
-    }
-
-    const { data } = await dbQuery;
+    const ingredientIds = await searchIngredientIds(supabase, query);
+    const { data } = await searchUserRecipes(supabase, user.id, query, ingredientIds);
     recipes = (data as Recipe[]) ?? [];
   } else {
-    const { data } = await supabase
-      .from("recipes")
-      .select("*")
-      .order("created_at", { ascending: false });
+    const { data } = await getUserRecipes(supabase);
     recipes = (data as Recipe[]) ?? [];
   }
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 3 }}>
-        <Typography variant="h4" sx={{ fontWeight: 'bold' }}>Mis recetas</Typography>
+        <Typography variant="h4" sx={{ fontWeight: "bold" }}>Mis recetas</Typography>
         <Box sx={{ display: "flex", gap: 1 }}>
           <Link href="/explore"><Button variant="outlined">Explorar</Button></Link>
           <Link href="/recipes/new"><Button variant="contained">+ Nueva receta</Button></Link>
@@ -68,9 +48,7 @@ export default async function RecipesPage({
       </Box>
 
       <Box sx={{ mb: 3 }}>
-        <Suspense>
-          <RecipeSearch />
-        </Suspense>
+        <Suspense><RecipeSearch /></Suspense>
       </Box>
 
       {recipes.length === 0 ? (

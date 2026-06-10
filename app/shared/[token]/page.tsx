@@ -3,6 +3,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import type { RecipeWithDetails } from "@/lib/types";
+import { getShareByToken, getRecipeWithDetails } from "@/utils/actions";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
@@ -24,20 +25,10 @@ export default async function SharedRecipePage({
 
   const service = createServiceClient();
 
-  const { data: share } = await service
-    .from("recipe_shares")
-    .select("recipe_id, shared_by, shared_with_email")
-    .eq("token", token)
-    .single();
-
+  const { data: share } = await getShareByToken(service, token);
   if (!share) notFound();
 
-  const { data: recipe } = await service
-    .from("recipes")
-    .select("*, ingredients(*), steps(*)")
-    .eq("id", share.recipe_id)
-    .single();
-
+  const { data: recipe } = await getRecipeWithDetails(service, share.recipe_id);
   if (!recipe) notFound();
 
   const r = recipe as RecipeWithDetails;
@@ -49,8 +40,6 @@ export default async function SharedRecipePage({
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
       <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-
-        {/* Header */}
         <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <Link href="/recipes"><Button variant="text">← Mis recetas</Button></Link>
           {!isOwner && <CloneSharedRecipeButton token={token} />}
@@ -64,40 +53,28 @@ export default async function SharedRecipePage({
           </Paper>
         )}
 
-        {/* Image */}
         {r.image_url && (
-          <Box
-            component="img"
-            src={r.image_url}
-            alt={r.title}
-            sx={{ width: "100%", height: 280, objectFit: "cover", borderRadius: 2 }}
-          />
+          <Box component="img" src={r.image_url} alt={r.title} sx={{ width: "100%", height: 280, objectFit: "cover", borderRadius: 2 }} />
         )}
 
-        {/* Title & meta */}
         <Box>
-          <Typography variant="h4" sx={{ mb: 1.5, fontWeight: 'bold' }}>{r.title}</Typography>
+          <Typography variant="h4" sx={{ mb: 1.5, fontWeight: "bold" }}>{r.title}</Typography>
           <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
             {r.servings && <Chip label={`${r.servings} porciones`} size="small" />}
             {r.prep_time_minutes && <Chip label={`Prep: ${r.prep_time_minutes} min`} size="small" />}
             {r.cook_time_minutes && <Chip label={`Cocción: ${r.cook_time_minutes} min`} size="small" />}
             {totalTime > 0 && <Chip label={`Total: ${totalTime} min`} size="small" color="primary" />}
           </Box>
-          {r.description && (
-            <Typography color="text.secondary" sx={{ mt: 1.5 }}>{r.description}</Typography>
-          )}
+          {r.description && <Typography color="text.secondary" sx={{ mt: 1.5 }}>{r.description}</Typography>}
         </Box>
 
-        {/* Ingredients */}
         {ingredients.length > 0 && (
           <Box>
             <Typography variant="h6" sx={{ mb: 1.5, fontWeight: 600 }}>Ingredientes</Typography>
             <Box component="ul" sx={{ m: 0, pl: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 0.5 }}>
               {ingredients.map((ing) => (
                 <Box component="li" key={ing.id} sx={{ display: "flex", gap: 1 }}>
-                  <Typography sx={{ fontWeight: 500 }}>
-                    {ing.amount && `${ing.amount} `}{ing.unit && `${ing.unit} `}
-                  </Typography>
+                  <Typography sx={{ fontWeight: 500 }}>{ing.amount && `${ing.amount} `}{ing.unit && `${ing.unit} `}</Typography>
                   <Typography>{ing.name}</Typography>
                 </Box>
               ))}
@@ -105,23 +82,19 @@ export default async function SharedRecipePage({
           </Box>
         )}
 
-        {/* Steps */}
         {steps.length > 0 && (
           <Box>
             <Typography variant="h6" sx={{ mb: 1.5, fontWeight: 600 }}>Preparación</Typography>
             <Box component="ol" sx={{ m: 0, pl: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 2 }}>
               {steps.map((step, idx) => (
                 <Box component="li" key={step.id} sx={{ display: "flex", gap: 2 }}>
-                  <Typography color="text.secondary" sx={{ minWidth: 24, fontWeight: 'bold' }}>
-                    {idx + 1}.
-                  </Typography>
+                  <Typography color="text.secondary" sx={{ minWidth: 24, fontWeight: "bold" }}>{idx + 1}.</Typography>
                   <Typography>{step.description}</Typography>
                 </Box>
               ))}
             </Box>
           </Box>
         )}
-
       </Box>
     </Container>
   );

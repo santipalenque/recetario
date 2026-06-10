@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { deleteRecipe } from "@/utils/actions";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
@@ -18,7 +19,7 @@ export default function DeleteRecipeButton({ recipeId }: { recipeId: string }) {
   async function handleDelete() {
     setDeleting(true);
     const supabase = createClient();
-    await supabase.from("recipes").delete().eq("id", recipeId);
+    await deleteRecipe(supabase, recipeId);
     router.push("/recipes");
     router.refresh();
   }

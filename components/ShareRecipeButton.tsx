@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { shareRecipeByEmail } from "@/utils/actions";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
@@ -27,13 +28,8 @@ export default function ShareRecipeButton({ recipeId, recipeName, variant = "out
     setSending(true);
     setResult(null);
     try {
-      const res = await fetch("/api/share-recipe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ recipeId, recipientEmail: email.trim() }),
-      });
-      const data = await res.json();
-      if (res.ok) {
+      const { ok, data } = await shareRecipeByEmail(recipeId, email.trim());
+      if (ok) {
         setResult({ ok: true, message: `Receta compartida con ${email.trim()}` });
         setEmail("");
       } else {
