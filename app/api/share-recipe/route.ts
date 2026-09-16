@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import { getAuthUser } from "@/lib/supabase/auth";
 import { shareRecipeEmail } from "@/lib/resend";
 import { getRecipeForOwner, createRecipeShare } from "@/utils/actions";
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getAuthUser(supabase);
   if (!user) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
 
   const { recipeId, recipientEmail } = await req.json();

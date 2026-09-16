@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { anthropic } from "@/lib/anthropic";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { getAuthUser } from "@/lib/supabase/auth";
 import { UNITS, SYSTEM_PROMPT, type Unit } from "@/utils/constants";
 
 type ParsedIngredient = { name: string; amount: number | null; unit: string };
@@ -35,7 +36,7 @@ export async function POST(req: NextRequest) {
     { cookies: { getAll: () => cookieStore.getAll(), setAll: () => {} } }
   );
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getAuthUser(supabase);
   if (!user) {
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
   }

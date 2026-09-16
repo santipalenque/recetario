@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import { getAuthUser } from "@/lib/supabase/auth";
 import { redirect } from "next/navigation";
 import type { Ingredient, Step } from "@/lib/types";
 import {
@@ -15,7 +16,7 @@ import {
 
 export async function cloneRecipe(recipeId: string) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getAuthUser(supabase);
   if (!user) redirect("/auth/login");
 
   const { data: recipe } = await getPublicRecipeWithDetails(supabase, recipeId);
@@ -63,7 +64,7 @@ export async function cloneRecipe(recipeId: string) {
 
 export async function cloneSharedRecipe(token: string) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getAuthUser(supabase);
   if (!user) redirect("/auth/login");
 
   const service = createServiceClient();

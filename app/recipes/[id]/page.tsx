@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import type { RecipeWithDetails } from "@/lib/types";
 import { getRecipeWithDetails } from "@/utils/actions";
+import { getAuthUser } from "@/lib/supabase/auth";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
@@ -16,7 +17,7 @@ export default async function RecipePage({ params }: { params: Promise<{ id: str
   const { id } = await params;
   const supabase = await createClient();
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getAuthUser(supabase);
   if (!user) redirect("/auth/login");
 
   const { data: recipe } = await getRecipeWithDetails(supabase, id);

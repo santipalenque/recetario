@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getAuthUser } from "@/lib/supabase/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import type { MenuPreferences, WeeklyMenuWithItems } from "@/lib/types";
@@ -21,7 +22,7 @@ const DEFAULT_PREFS: MenuPreferences = {
 
 export default async function MenuPage() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getAuthUser(supabase);
   if (!user) redirect("/auth/login");
 
   const { data: savedPrefs } = await supabase

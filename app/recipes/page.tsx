@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import type { Recipe } from "@/lib/types";
 import { getUserRecipes, searchIngredientIds, searchUserRecipes } from "@/utils/actions";
+import { getAuthUser } from "@/lib/supabase/auth";
 import RecipeCard from "@/components/RecipeCard";
 import RecipeSearch from "@/components/RecipeSearch";
 import Box from "@mui/material/Box";
@@ -17,7 +18,7 @@ export default async function RecipesPage({
   searchParams: Promise<{ q?: string }>;
 }) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getAuthUser(supabase);
   if (!user) redirect("/auth/login");
 
   const { q } = await searchParams;

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Formik, Form } from "formik";
 import { createClient } from "@/lib/supabase/client";
+import { getAuthUser } from "@/lib/supabase/auth";
 import {
   createRecipe, updateRecipe,
   deleteIngredients, insertIngredients,
@@ -51,7 +52,7 @@ export default function RecipeForm({ recipe }: { recipe?: RecipeWithDetails }) {
     { setSubmitting, setStatus }: { setSubmitting: (v: boolean) => void; setStatus: (s: string) => void }
   ) {
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getAuthUser(supabase);
     if (!user) { router.push("/auth/login"); return; }
 
     const recipeData = {

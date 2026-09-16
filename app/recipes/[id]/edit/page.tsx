@@ -2,13 +2,14 @@ import { createClient } from "@/lib/supabase/server";
 import { notFound, redirect } from "next/navigation";
 import type { RecipeWithDetails } from "@/lib/types";
 import { getRecipeWithDetails } from "@/utils/actions";
+import { getAuthUser } from "@/lib/supabase/auth";
 import RecipeForm from "@/components/RecipeForm";
 
 export default async function EditRecipePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getAuthUser(supabase);
   if (!user) redirect("/auth/login");
 
   const { data: recipe } = await getRecipeWithDetails(supabase, id);

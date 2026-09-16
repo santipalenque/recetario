@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { getAuthUser } from "@/lib/supabase/auth";
 import Anthropic from "@anthropic-ai/sdk";
 import type { MenuPreferences } from "@/lib/types";
 
@@ -49,7 +50,7 @@ Reglas: day 0=Lunes, day 6=Domingo. 14 slots exactos. Solo IDs de las recetas di
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getAuthUser(supabase);
   if (!user) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
 
   const { preferences } = await req.json() as { preferences: MenuPreferences };
