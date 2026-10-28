@@ -1,0 +1,59 @@
+# Build the image, push it to GitHub Container Registry and roll it out on the droplet (see the infra repo).
+# Off until the repository variable DEPLOY_ENABLED is set to "true".
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency: deploy
+
+jobs:
+  deploy:
+    if: vars.DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          push: true
+          tags: |
+            ghcr.io/santipalenque/recetario:latest
+            ghcr.io/santipalenque/recetario:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+            NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+            NEXT_PUBLIC_SITE_URL=https://recetario.santiagopalenque.com
+
+      - name: Roll out on the droplet
+        env:
+          HOST: ${{ secrets.DROPLET_HOST }}
+          SSH_KEY: ${{ secrets.DROPLET_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DROPLET_KNOWN_HOSTS }}
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          install -m 700 -d ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/id_ed25519 && chmod 600 ~/.ssh/id_ed25519
+          echo "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          # the job's own token lets the droplet pull the image; it expires with the job, so log out after
+          echo "$REGISTRY_TOKEN" | ssh deploy@"$HOST" 'docker login ghcr.io -u ${{ github.actor }} --password-stdin >/dev/null \
+            && cd /srv/infra \
+            && docker compose pull recetario \
+            && docker logout ghcr.io >/dev/null \
+            && docker compose up -d recetario \
+            && docker image prune -f'
